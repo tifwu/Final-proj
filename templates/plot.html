@@ -1,4 +1,42 @@
 <!-- plot.html -->
 
-<h1>Gross in USA/Worldwide</h1>
-{{div}}
+<head>
+	<title>Movie Data Table</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/bootstrap/css/bootstrap.min.css">
+
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/animate/animate.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/perfect-scrollbar/perfect-scrollbar.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/css/util.css">
+	<link rel="stylesheet" type="text/css" href="static/css/main.css">
+<!--===============================================================================================-->
+</head>
+
+<div class="limiter">
+    <div class="container-plot">
+        <div style="padding-bottom: 30px">
+            <a href='/'><button type='button' class='btn btn-secondary'>Back to homepage</button></a>
+        </div>
+    </div>
+    <div class="container-plot">
+        <div class='mx-auto pa' style="padding-bottom: 30px">
+            <h1>Gross in USA/Worldwide</h1>
+        </div>
+        <br />
+        <div class='col-md-10 col-md-offset-2 mx-auto'>
+            {{div|safe}}
+        </div>
+    </div>
+</div>
+    
+    
+    
+    
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>

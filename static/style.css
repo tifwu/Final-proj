@@ -1,0 +1,9 @@
+html {
+    font-family: sans-serif;
+}
+
+tr:nth-child(even) {background-color: #f2f2f2;}
+
+th {
+    height: 50px;
+}

@@ -6,6 +6,7 @@ from secrets import plotly_username, plotly_key
 import plotly
 import plotly.plotly as py
 import plotly.graph_objs as go
+from math import log
 
 CACHE_FNAME = 'imdb_cache.json'
 global DBNAME
@@ -129,21 +130,8 @@ def clean_gross_no(str):
     return int(return_num)
 
 
-def get_ref_key(str, table):
-    conn = sqlite3.connect(DBNAME)
-    cur = conn.cursor()
-
-    statement = '''
-        SELECT Id FROM {} WHERE 'Name'=?
-    '''
-    statement = statement.format(table)
-    cur.execute(statement, str)
-    id = cur.fetchone()[0]
-    conn.close()
-    return id
-
-
 def scrape_and_populate():
+    ## Scrape top 250 page
     baseurl = "https://www.imdb.com"
     chart_url = "/chart/top"
     resp = request_from_cached_data(baseurl + chart_url)
@@ -166,6 +154,7 @@ def scrape_and_populate():
         rating = i.find(class_='ratingColumn').text.strip()
         rating = float(rating)
 
+        ## Scrape individual movie page
         resp = request_from_cached_data(baseurl + movie_url)
         soup = BeautifulSoup(resp, 'html.parser')
         direct_div = soup.find(class_='credit_summary_item')
@@ -203,8 +192,9 @@ def scrape_and_populate():
             gross_world = None
 
         data_dict[title] = {'rating': rating, 'director': director, 'genre': genre, 'language': language, 'country': country, 'gross_usa': gross_usa, 'gross_world': gross_world}
-
-    print(data_dict)
+    # print(data_dict)
+    
+    
     ## Populate referenced tables
     populate_ref_tables('Country', country_list)
     populate_ref_tables('Language', language_list)
@@ -334,14 +324,94 @@ def plot_gross():
     
     conn.close()
     return div
+
+
+def plot_heatmap():
+    conn = sqlite3.connect(DBNAME)
+    cur = conn.cursor()
     
-#
-#if __name__ == '__main__':
+    statement = '''
+        SELECT  m.GrossUSA, m.WorldwideGross, g.Name, c.Name
+        FROM Movies AS m
+            JOIN Genre AS g ON g.Id = m.Genre
+                JOIN Country AS c ON c.Id = m.Country
+        GROUP BY g.Name, c.Name
+    '''
+    cur.execute(statement)
+    results = cur.fetchall()
+    
+    avg_gross=[]
+    country=[]
+    genre=[]
+    for movie in results:
+        if (movie.count(None) != 2):
+            genre.append(movie[2])
+            country.append(movie[3])
+            if movie[0] == None:
+                avg_gross.append(log(movie[1], 2))
+            elif movie[1] == None:
+                avg_gross.append(log(movie[0], 2))
+            else:
+                avg_gross.append(log(movie[0]+movie[1]/2, 2))
+    
+    trace = go.Scatter(
+        x = country,
+        y = genre,
+        text=[country, genre],
+        mode = 'markers',
+        marker = dict(
+            size=avg_gross,
+            color='rgb(152,103,69)',
+        )
+    )
+    
+    layout = dict(
+        title='Average gross in USA and World market by Country and Genre',
+        xaxis=dict(title='Country', gridwidth= 2),
+        yaxis=dict(title='Genre', gridwidth= 2)
+    )
+    
+    data = [trace]
+    
+    fig = dict(data=data, layout=layout)
+#    py.plot(fig, filename = 'test')
+    div = plotly.offline.plot(fig, show_link=False, output_type="div", include_plotlyjs=True)
+    
+    conn.close()
+    return div
+    
+
+def display_in_table(sortby='ratings', sortorder='DESC'):
+    conn = sqlite3.connect(DBNAME)
+    cur = conn.cursor()
+    sort_param = 'm.Ratings'
+    order_param = 'DESC'
+    
+    statement = '''
+        SELECT m.Titles, m.Ratings, m.Director, g.Name, c.Name, l.Name, m.GrossUSA, m.WorldwideGross FROM Movies AS m
+        LEFT JOIN Country AS c ON m.Country=c.Id
+            LEFT JOIN Genre AS g ON m.Genre=g.Id
+                LEFT JOIN [Language] AS l ON m.[Language]=l.Id
+        ORDER BY {} {}
+    '''
+    if sortby == 'gross_usa':
+        sort_param = 'm.GrossUSA'
+    elif sortby == 'gross_world':
+        sort_param = 'm.WorldwideGross'
+    
+    if sortorder == 'asc':
+        order_param = 'ASC'
+        
+    cur.execute(statement.format(sort_param, order_param))
+    movies = cur.fetchall()
+    # print(movies)
+    conn.close()
+    return movies
+
+
+
+# if __name__ == '__main__':
 #    # create_database()
 #    # scrape_and_populate()
 #    # plotly.tools.set_credentials_file(username=plotly_username, api_key=plotly_key)
-#    
-#    
-
-
-
+    

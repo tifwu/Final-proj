@@ -1,9 +1,167 @@
 <!-- index.html -->
 
-<h1>Welcome to Imdb Top 250 data explorer!</h1>
-    <h3>Go to the following link to browse the data.</h3>
-    <ul>
-        <li><a href='#'>Full data table</a></li>
-        <li><a href='/gross'>Gross in USA/Worldwide</a></li>
-        <li><a href='/language-gross'>Movie language x Gross in USA/Worldwide</a></li>
-    </ul>
+<head>
+	<title>Movie Data Table</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/bootstrap/css/bootstrap.min.css">
+
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/animate/animate.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/vendor/perfect-scrollbar/perfect-scrollbar.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="static/css/util.css">
+	<link rel="stylesheet" type="text/css" href="static/css/main.css">
+<!--===============================================================================================-->
+</head>
+
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}"/>
+
+<div class="limiter">
+    
+    <section class=" container-cover jumbotron text-center" style='background-image: url("static/home.jpg");'>
+            
+              <h1 class="jumbotron-heading text-white" style='padding-bottom: 3rem'>Welcome to Imdb Top 250 data explorer!</h1>
+              
+              <p>
+                <a href="#links" class="btn btn-secondary my-2">Explore more</a>
+              </p>
+            
+    </section>
+    
+    <div class="container-card">
+        <div class='row' style='background-color: inherit' id='links'>
+            
+            <div class='.d-md-inline-flex d-flex justify-content-center '>
+                <div class="card text-white bg-dark mb-3 mr-3 col-md-6" align-top style="max-width: 18rem; height: 250px; display: inline-block">
+                  <a href='/gross' class='text-white'>
+                      <div class="card-header">Plotly</div>
+                      <div class="card-body">
+                        <h5 class="card-title">Gross in USA/Worldwide</h5>
+                        <p class="card-text">A scatterplot of top 250 movies' gross in USA and global market.</p>
+                      </div>
+                  </a>
+                </div>
+
+                <div class="card text-white bg-dark mb-3 align-top mr-3" style="max-width: 18rem; height: 250px; display: inline-block">
+                    <a href='/language-gross' class='text-white'>
+                      <div class="card-header">Plotly</div>
+                      <div class="card-body">
+                        <h5 class="card-title">Movie language x Gross in USA/Worldwide</h5>
+                        <p class="card-text">A bar chart of top 250 movies' gross in USA/Worldwide by its langauges.</p>
+                      </div>
+                    </a>
+                </div>
+                
+                <div class="card text-white bg-dark mb-3 align-top mr-3" style="max-width: 18rem; height: 250px; display: inline-block">
+                    <a href='/heatmap' class='text-white'>
+                      <div class="card-header">Plotly</div>
+                      <div class="card-body">
+                        <h5 class="card-title">Average gross by Country and Genre</h5>
+                        <p class="card-text">A heatmap of average gross by movie country and genre.</p>
+                      </div>
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+        
+    <div class='pb-0 container-card'>
+        <form action="/" method="POST">
+
+            <div class='d-inline-block px-5'>
+            <h4>Sort by:</h4>
+            <br/>
+            <div class="form-check form-check-inline px-2">
+              <input class="form-check-input" type="radio" name="sortby" id="ratings" value="ratings" checked>
+              <label class="form-check-label" for="ratings">Ratings</label>
+            </div>
+            <div class="form-check form-check-inline px-2">
+              <input class="form-check-input" type="radio" name="sortby" id="gross_usa" value="gross_usa">
+              <label class="form-check-label" for="gross_usa">Gross USA</label>
+            </div>
+            <div class="form-check form-check-inline px-2">
+              <input class="form-check-input" type="radio" name="sortby" id="gross_world" value="gross_world">
+              <label class="form-check-label" for="gross_world">Gross Worldwide</label>
+            </div>
+            </div>
+
+            <div class='d-inline-block px-5'>  
+            <h4>Sort Order:</h4>
+            <br/>
+            <div class="form-check form-check-inline px-2">
+              <input class="form-check-input" type="radio" name="sortorder" id="inlineRadio4" value="desc" checked>
+              <label class="form-check-label" for="inlineRadio4">Descending</label>
+            </div>
+            <div class="form-check form-check-inline px-2">
+              <input class="form-check-input" type="radio" name="sortorder" id="inlineRadio5" value="asc">
+              <label class="form-check-label" for="inlineRadio5">Ascending</label>
+            </div>
+            </div>
+
+            <input class='btn btn-dark' type='submit' name='update' value='Update'/>
+
+        </form>
+    </div>
+
+    
+    <div class="container-table100">
+        
+        <div class="wrap-table100">
+					<div class="table">
+						<div class="row header">
+							<div class="cell">
+								Titles
+							</div>
+							<div class="cell">
+								Ratings
+							</div>
+							<div class="cell">
+								Director
+							</div>
+							<div class="cell">
+								Genre
+							</div>
+                            <div class="cell">
+								Country
+							</div>
+                            <div class="cell">
+								Language
+							</div>
+                            <div class="cell">
+								Gross USA
+							</div>
+                            <div class="cell">
+								Gross Worldwide
+							</div>
+						</div>
+                        
+                        {% for movie in movies %}
+						<div class="row">
+							{% for cell in movie %}
+                            <div class="cell">
+								{{cell if cell is not none else ''}}
+							</div>
+                            {% endfor %}
+						</div>
+                        {% endfor %}
+
+					</div>
+			</div>
+    </div>
+</div>
+
+
+
+<!--
+
+<script src="{{url_for('static', filename='/vendor/jquery/jquery-3.2.1.min.js')}}"></script>
+<script src="{{url_for('static', filename='/static/vendor/bootstrap/js/popper.js')}}"></script>
+<script src="{{url_for('static', filename='/vendor/bootstrap/js/bootstrap.min.js')}}"></script>
+<script src="{{url_for('static', filename='/vendor/select2/select2.min.js')}}"></script>
+<script src="{{url_for('static', filename='/js/main.js')}}"></script>-->
