@@ -1,6 +1,7 @@
 from Final_proj import *
 import unittest
 
+
 class TestDatabase(unittest.TestCase):
     
     def test_movies_table(self):
@@ -17,8 +18,6 @@ class TestDatabase(unittest.TestCase):
         cur.execute(sql)
         results = cur.fetchall()
         self.assertIn(('Drama',), results)
-        
-        
         
         conn.close()
         
@@ -101,21 +100,28 @@ class TestCleanMethods(unittest.TestCase):
         self.assertEqual(num, 123456789)
 
         
+class TestClass(unittest.TestCase):
+    def test_movie_class(self):
+        sample = Movie('Test title', 8.2, 'Test director', 'Drama', 'English', 'USA', 12345, 123456)
+        self.assertIsInstance(sample, Movie)
+        self.assertEqual(sample.title, 'Test title')
+        self.assertEqual(sample.rating, 8.2)
+        
+        
 class TestMapping(unittest.TestCase):
-    def test_language_gross(self):
+    def test_plot(self):
         try:
             plot_language_gross()
             plot_gross()
+            plot_heatmap()
         except:
             self.fail()
             
     def test_display_table(self):
         movies = display_in_table()
         self.assertEqual(len(movies), 250)
-        
-        
-    def test_heat_map(self):
-        pass
+        self.assertEqual(len(movies[0]), 8)
+
 
         
 if __name__ == '__main__':

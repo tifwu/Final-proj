@@ -12,6 +12,24 @@ CACHE_FNAME = 'imdb_cache.json'
 global DBNAME
 DBNAME = 'imdb_top250.sqlite'
 
+
+class Movie(object):
+    def __init__(self, title, rating, director, genre, language, country, gross_usa, gross_world):
+        self.title = title
+        self.rating = rating
+        self.director = director
+        self.genre = genre
+        self.language = language
+        self.country = country
+        self.gross_usa = gross_usa
+        self.gross_world = gross_world
+
+    def __str__(self):
+        return '{} by {} ({})'.format(self.title, self.director, self.rating)
+
+
+# insertion = (movie[0], movie[1]['rating'], movie[1]['director'], genre_id, language_id, country_id, movie[1]['gross_usa'], movie[1]['gross_world'])
+
 def create_unique_ident(url):
     return url
 
@@ -130,7 +148,7 @@ def clean_gross_no(str):
     return int(return_num)
 
 
-def scrape_and_populate():
+def scrape_and_populate_ref(items=250):
     ## Scrape top 250 page
     baseurl = "https://www.imdb.com"
     chart_url = "/chart/top"
@@ -142,11 +160,12 @@ def scrape_and_populate():
     movie_list = soup.find(class_="lister-list")
     movie_items = movie_list.find_all('tr')
 
-    data_dict = {}
+    # data_dict = {}
+    movies_data = []
     country_list = []
     genre_list = []
     language_list = []
-    for i in movie_items:
+    for i in movie_items[:items]:
         title_col = i.find(class_="titleColumn")
         title_link = title_col.find('a')
         title = title_link.text
@@ -191,8 +210,8 @@ def scrape_and_populate():
         except:
             gross_world = None
 
-        data_dict[title] = {'rating': rating, 'director': director, 'genre': genre, 'language': language, 'country': country, 'gross_usa': gross_usa, 'gross_world': gross_world}
-    # print(data_dict)
+        # data_dict[title] = {'rating': rating, 'director': director, 'genre': genre, 'language': language, 'country': country, 'gross_usa': gross_usa, 'gross_world': gross_world}
+        movies_data.append(Movie(title, rating, director, genre, language, country, gross_usa, gross_world))
     
     
     ## Populate referenced tables
@@ -200,35 +219,43 @@ def scrape_and_populate():
     populate_ref_tables('Language', language_list)
     populate_ref_tables('Genre', genre_list)
 
+    return movies_data
+
+
+def populate_main_table():
+    movies_data = scrape_and_populate_ref()
+
     ## Populate main data table
     conn = sqlite3.connect(DBNAME)
     cur = conn.cursor()
 
-    for movie in data_dict.items():
-        statement = "SELECT Id FROM Genre WHERE Name='{}'".format(movie[1]['genre'])
+    for movie in movies_data:
+        statement = "SELECT Id FROM Genre WHERE Name='{}'".format(movie.genre)
         cur.execute(statement)
         genre_id = cur.fetchone()[0]
 
-        statement = "SELECT Id FROM [Language] WHERE Name='{}'".format(movie[1]['language'])
+        statement = "SELECT Id FROM [Language] WHERE Name='{}'".format(movie.language)
         cur.execute(statement)
         language_id = cur.fetchone()[0]
 
-        statement = "SELECT Id FROM Country WHERE Name='{}'".format(movie[1]['country'])
+        statement = "SELECT Id FROM Country WHERE Name='{}'".format(movie.country)
         cur.execute(statement)
         country_id = cur.fetchone()[0]
 
         statement = '''
-            INSERT INTO Movies(Titles, Ratings, Director, Genre, Country, [Language], GrossUSA, WorldwideGross)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        '''
+                INSERT INTO Movies(Titles, Ratings, Director, Genre, Country, [Language], GrossUSA, WorldwideGross)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            '''
 
-        insertion = (movie[0], movie[1]['rating'], movie[1]['director'], genre_id, language_id, country_id, movie[1]['gross_usa'], movie[1]['gross_world'])
+        insertion = (
+        movie.title, movie.rating, movie.director, genre_id, language_id, country_id, movie.gross_usa,
+        movie.gross_world)
         cur.execute(statement, insertion)
 
     conn.commit()
     conn.close()
 
-    
+
 def plot_language_gross():
     conn = sqlite3.connect(DBNAME)
     cur = conn.cursor()
@@ -381,7 +408,7 @@ def plot_heatmap():
     return div
     
 
-def display_in_table(sortby='ratings', sortorder='DESC'):
+def display_in_table(sortby='ratings', sortorder='DESC', searchTitle=''):
     conn = sqlite3.connect(DBNAME)
     cur = conn.cursor()
     sort_param = 'm.Ratings'
@@ -392,7 +419,6 @@ def display_in_table(sortby='ratings', sortorder='DESC'):
         LEFT JOIN Country AS c ON m.Country=c.Id
             LEFT JOIN Genre AS g ON m.Genre=g.Id
                 LEFT JOIN [Language] AS l ON m.[Language]=l.Id
-        ORDER BY {} {}
     '''
     if sortby == 'gross_usa':
         sort_param = 'm.GrossUSA'
@@ -401,8 +427,13 @@ def display_in_table(sortby='ratings', sortorder='DESC'):
     
     if sortorder == 'asc':
         order_param = 'ASC'
-        
-    cur.execute(statement.format(sort_param, order_param))
+    order_statement = ' ORDER BY {} {}'.format(sort_param, order_param)
+    
+    if searchTitle != '':
+        searchStatement = ' WHERE m.Titles LIKE "{}"'.format('%'+searchTitle+'%')
+        statement += searchStatement
+
+    cur.execute(statement + order_statement)    
     movies = cur.fetchall()
     # print(movies)
     conn.close()
@@ -410,8 +441,7 @@ def display_in_table(sortby='ratings', sortorder='DESC'):
 
 
 
-# if __name__ == '__main__':
-#    # create_database()
-#    # scrape_and_populate()
-#    # plotly.tools.set_credentials_file(username=plotly_username, api_key=plotly_key)
-    
+if __name__ == '__main__':
+#    create_database()
+#    populate_main_table()
+    plotly.tools.set_credentials_file(username=plotly_username, api_key=plotly_key)

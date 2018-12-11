@@ -9,7 +9,8 @@ def index():
     if request.method == 'POST':
         sortby = request.form['sortby']
         sortorder = request.form['sortorder']
-        data = proj.display_in_table(sortby,sortorder)
+        searchTitle = request.form['searchTitle']
+        data = proj.display_in_table(sortby,sortorder, searchTitle)
     else:
         data = proj.display_in_table()
     return render_template('index.html', movies=data)
