@@ -33,3 +33,15 @@ There are mainly 4 functions for data presentation:
 - plot_gross()
 - plot_heatmap()
 - display_in_table()
+The former three functions plot the data requested from the database into different charts, and the last function takes input from users to filter the data displayed in the table.
+
+### class Movie():
+There is one class defined in this program to stored the information as attributes in each instance.
+
+
+## User Guide
+1. To successfully run the program, please make sure you have successfully installed the modules specified in the requirements.txt file
+2. Initialize the database by running **Final_proj.py**
+3. Run **app.py** to start the flask app, and open the app with your browser
+
+
