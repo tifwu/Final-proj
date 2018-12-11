@@ -103,12 +103,19 @@
               <label class="form-check-label" for="inlineRadio5">Ascending</label>
             </div>
             </div>
-            
-            <div class='d-inline-block px-5'> 
+            <br / >
+            <div class='d-block px-5'> 
                 <br />
-                <h4>Search by Title: </h4>
+                <h4>Search by: </h4>
                 <br/>
-                <input type='text' name='searchTitle'>
+                <select name="searchBy">
+                    <option value="titles">Titles</option>
+                    <option value="country">Country</option>
+                    <option value="language">Language</option>
+                    <option value="genre">Genre</option>
+                </select>
+                
+                <input class='d-inline-block' type='text' name='searchTitle'>
             </div>
             
             <br /><br />

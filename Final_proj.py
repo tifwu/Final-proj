@@ -248,7 +248,7 @@ def populate_main_table():
             '''
 
         insertion = (
-        movie.title, movie.rating, movie.director, genre_id, language_id, country_id, movie.gross_usa,
+        movie.title, movie.rating, movie.director, genre_id, country_id, language_id, movie.gross_usa,
         movie.gross_world)
         cur.execute(statement, insertion)
 
@@ -280,16 +280,20 @@ def plot_language_gross():
     trace1 = go.Bar(
         x=languages,
         y=gross_usa,
-        text=gross_usa,
         textposition='auto',
-        name='USA average gross'
+        name='USA average gross',
+        marker = dict(
+            color='rgb(152,103,69)'
+        )
     )
     trace2 = go.Bar(
         x=languages,
         y=gross_world,
-        text=gross_world,
         textposition='auto',
-        name='Worldwide average gross'
+        name='Worldwide average gross',
+        marker = dict(
+            color='rgb(33, 37, 41)'
+        )
     )
     layout = go.Layout(
         title='Average gross by language in USA market / worldwide',
@@ -334,8 +338,9 @@ def plot_gross():
     mode = 'markers',
     marker = dict(
         size = 14,
-        opacity = 0.5
-    )
+        opacity = 0.5,
+        color='rgb(152,103,69)'
+        )
     )
 
     layout = dict(
@@ -408,7 +413,7 @@ def plot_heatmap():
     return div
     
 
-def display_in_table(sortby='ratings', sortorder='DESC', searchTitle=''):
+def display_in_table(sortby='ratings', sortorder='DESC', searchBy='Country', searchTitle=''):
     conn = sqlite3.connect(DBNAME)
     cur = conn.cursor()
     sort_param = 'm.Ratings'
@@ -430,9 +435,18 @@ def display_in_table(sortby='ratings', sortorder='DESC', searchTitle=''):
     order_statement = ' ORDER BY {} {}'.format(sort_param, order_param)
     
     if searchTitle != '':
-        searchStatement = ' WHERE m.Titles LIKE "{}"'.format('%'+searchTitle+'%')
+        if searchBy == 'titles':
+            searchBy = 'm.titles'
+        elif searchBy == 'country':
+            searchBy = 'c.Name'
+        elif searchBy == 'language':
+            searchBy = 'l.Name'
+        elif searchBy == 'genre':
+            searchBy = 'g.Name'
+        
+        searchStatement = ' WHERE {} LIKE "{}"'.format(searchBy, '%'+searchTitle+'%')
         statement += searchStatement
-
+        
     cur.execute(statement + order_statement)    
     movies = cur.fetchall()
     # print(movies)
@@ -442,6 +456,6 @@ def display_in_table(sortby='ratings', sortorder='DESC', searchTitle=''):
 
 
 if __name__ == '__main__':
-#    create_database()
-#    populate_main_table()
+    create_database()
+    populate_main_table()
     plotly.tools.set_credentials_file(username=plotly_username, api_key=plotly_key)
