@@ -12,7 +12,8 @@
 1. Sign up on Plotly: https://plot.ly/
 2. Pip install plotly if it is not already on your machine
 3. Create a **secrets.py** file and include the following information
-'''
+```
 plotly_username = <your username>
 plotly_key = <your api key>
-'''
+```
+
